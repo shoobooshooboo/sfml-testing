@@ -1,6 +1,4 @@
-#include <SFML/Graphics.hpp>
-#include <SFML/Audio.hpp>
-#include <iostream>
+#include "Entities.hpp"
 
 const int SCREEN_WIDTH = sf::VideoMode::getDesktopMode().width;
 const int SCREEN_HEIGHT = sf::VideoMode::getDesktopMode().height;
@@ -73,9 +71,7 @@ sf::Vector2f normalize(sf::Vector2f v) {
     return sf::Vector2f(v.x / magnitude, v.y / magnitude);
 }
 
-int main() {
-    /*const float heightScale = 1000 / SCREEN_HEIGHT;
-    const float widthScale = 1000 / SCREEN_WIDTH;*/
+void pong() {
     sf::Image image;
     image.loadFromFile("face.png");
     sf::Texture texture;
@@ -84,10 +80,10 @@ int main() {
     ball.setTexture(texture);
 
     const float paddleHeight = 200.f, paddleWidth = 20.f,
-        ballDiameter =  ball.getGlobalBounds().getSize().x;
+        ballDiameter = ball.getGlobalBounds().getSize().x;
     unsigned int ballCooldown = 60;
     sf::Vector2f ballSpawnPoint(450.f, 450.f);
-    
+
 
     sf::RenderWindow window(sf::VideoMode(1000, 1000), "game");
     //sf::CircleShape ball(ballRadius);
@@ -101,7 +97,7 @@ int main() {
     p1.setPosition(sf::Vector2f(0.f, 500.f - (paddleHeight / 2)));
     p2.setPosition(sf::Vector2f(1000.f - paddleWidth, 500.f - (paddleHeight / 2)));
     window.setFramerateLimit(60);
-    
+
     int p1Score = 0, p2Score = 0;
 
     sf::Text p1ScoreText,
@@ -138,7 +134,7 @@ int main() {
             ballCooldown--;
 
         //std::cout << ballCooldown << std::endl;
-        
+
         //get keyboard inputs and update position
         if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up))
             p2Pos.y -= 10.f;
@@ -221,6 +217,42 @@ int main() {
         window.draw(p1ScoreText);
         window.draw(p2ScoreText);
         window.draw(winMessage);
+        window.display();
+    }
+
+}
+
+int main() {
+    sf::RenderWindow window(sf::VideoMode(1600, 900), "Game");
+    window.setFramerateLimit(60);
+
+    std::vector<Entity *> entities;
+    entities.push_back(new Enemy("face.png", 3.f, 100, 30, 10));
+    entities.push_back(new Tower("face.png", 60, 100, Projectile("face.png", 40, 10.f)));
+    entities[0]->setPosition(1400, 450);
+    entities[1]->setPosition(0, 450);
+    entities[1]->setColor(sf::Color::Green);
+
+    int spawnCooldown = 0;
+
+    while (window.isOpen()) {
+        window.clear();
+
+        if (!spawnCooldown) {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::P)) {
+                entities.push_back(new Enemy("face.png", 3.f, 100, 30, 50));
+                entities[entities.size() - 1]->setPosition(1400, 450);
+                spawnCooldown = 30;
+            }
+        }
+        else
+            spawnCooldown--;
+
+        for (int i = 0; i < entities.size(); i++) {
+            entities[i]->tick(entities);
+            if(entities.size() > i)
+                window.draw(static_cast<sf::Sprite>(*entities[i]));
+        }
         window.display();
     }
 
